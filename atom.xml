@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://Chestnut-lzj.github.io</id>
+    <title>Chestnut&apos;s blog</title>
+    <updated>2024-12-06T03:56:17.931Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://Chestnut-lzj.github.io"/>
+    <link rel="self" href="https://Chestnut-lzj.github.io/atom.xml"/>
+    <subtitle>随便写写</subtitle>
+    <logo>https://Chestnut-lzj.github.io/images/avatar.png</logo>
+    <icon>https://Chestnut-lzj.github.io/favicon.ico</icon>
+    <rights>All rights reserved 2024, Chestnut&apos;s blog</rights>
+    <entry>
+        <title type="html"><![CDATA[2024 网鼎杯 半决赛]]></title>
+        <id>https://Chestnut-lzj.github.io/post/2024-wang-ding-bei-ban-jue-sai/</id>
+        <link href="https://Chestnut-lzj.github.io/post/2024-wang-ding-bei-ban-jue-sai/">
+        </link>
+        <updated>2024-12-04T02:45:48.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="rsa">RSA</h2>
+<p>题目：</p>
+<pre><code class="language-python"># sagemath
+import random
+from Crypto.Util.number import *
+
+flag = b''
+
+k = 3
+d = k/(2*(k+1))
+ns = []
+pqs = []
+es = []
+
+for i in range(3):
+    p = getPrime(512)
+    q = getPrime(512)
+    if p &lt; q:
+        tmp = p
+        p = q
+        q = tmp
+    n = p*q
+    ns.append(n)
+    pqs.append((p,q))
+
+n = min(ns)
+x = random.randint(0,int(n^(d/2)))
+x = next_prime(x)
+
+for i in range(3):
+    p,q = pqs[i][0],pqs[i][1]
+    bound1 = int((p-q)/(3*(p+q)) * x * n ^ 0.25)
+    bound2 = int((p-q)/(3*(p+q)) * x^2 * n ^ 0.25)
+    z = random.randint(bound1,bound2)
+    f = (p-1)*(q-1)
+    e = inverse(x^2,f) * z % f
+    es.append(e)
+
+e = 8462913
+c = pow(bytes_to_long(flag),e,ns[0])
+
+print(f'ns={ns}')
+print(f'es={es}')
+print(f'c={c}')
+
+'''
+ns=[58456238154727772714762362790039415372652580738847549549926175214592421074440425380491278175531057453959583518365006871715668115289674464868754600641087664868445977308497244134179400977293896807231964047365956545629327100737851868274388108150918741474301542596310528990700043925342513137054619092876834352167, 77621328849675766747673031143217563980503830449890233197117569566535170499356584333526498228802079135043121885950830320777642529199704224484173792215691924850086027618183393165197503325417741686635820334799489140360184827244176669486536901652827052817389390205607840551799799037689580359943641014734459153393, 112244920700186260026594736958318991062998987080230137582151100770199379608284829383065111800934933346946496041561749555085922429662611986339400029890877247514987095240380019377389184545006798594193383230298132838994539491402564579629017309643629910561998268286162916487705908044261914142200286678017692930877]
+es=[46762963588977775648213636278524171408894671002158172701955774077187382885695296449518850546775920334764033057745226744111631183010556541467024035131602309988991836959736948179491431343087734419406823467043032520956443072556932946767546576469286010676651317873358203560021064830688914958086524112915123700678, 49605058941818136068558533413619424099600243928109466352604646203354430655695939177245076016870792265350960174089601299549033530643078866868937787258274475767441534991912769995268058506952466739575911255510940326565376471493045685544056383561868628029099619187607579109612157304977780126730283103824111801708, 35433601810279274137096137736120773703247868305827931187532982974242279082633517463016086358856291932337981126992048059591164336008738979183437333221010305682689432537562502148059203087673302900990705589870381203411821061168753251557946997898741497047442934600089950257888693394999451561437497637827070063398]
+c=45042826649205831967869785980034342377048541926664036544108272069702081866501394370318117629151408517708467341069558466115205805860156690204194355692872459196902123082567148537856941845388225814307822482217762135547080677443326657146552580523747535577686386312386011950929734955156100305548239483424574706729
+'''
+</code></pre>
+<p>首先我们通过</p>
+<pre><code class="language-python">  e = inverse(x^2,f) * z % f
+</code></pre>
+<p>得到以下式子</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>e</mi><mn>1</mn></msub><msup><mi>x</mi><mn>2</mn></msup><mo>=</mo><msub><mi>z</mi><mn>1</mn></msub><mo>+</mo><msub><mi>k</mi><mn>1</mn></msub><mo>(</mo><mi>p</mi><mi>h</mi><mi>i</mi><mn>1</mn><mo>)</mo></mrow><annotation encoding="application/x-tex">e_1x^2 = z_1 + k_1(phi1)
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0141079999999998em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">e</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathdefault">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641079999999999em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.73333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.04398em;">z</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.04398em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.03148em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathdefault">p</span><span class="mord mathdefault">h</span><span class="mord mathdefault">i</span><span class="mord">1</span><span class="mclose">)</span></span></span></span></span></p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>e</mi><mn>2</mn></msub><msup><mi>x</mi><mn>2</mn></msup><mo>=</mo><msub><mi>z</mi><mn>2</mn></msub><mo>+</mo><msub><mi>k</mi><mn>2</mn></msub><mo>(</mo><mi>p</mi><mi>h</mi><mn>2</mn><mo>)</mo></mrow><annotation encoding="application/x-tex">e_2x^2 = z_2 + k_2(ph2)
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0141079999999998em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">e</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathdefault">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641079999999999em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.73333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.04398em;">z</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.04398em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.03148em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathdefault">p</span><span class="mord mathdefault">h</span><span class="mord">2</span><span class="mclose">)</span></span></span></span></span></p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>e</mi><mn>3</mn></msub><msup><mi>x</mi><mn>2</mn></msup><mo>=</mo><msub><mi>z</mi><mn>3</mn></msub><mo>+</mo><msub><mi>k</mi><mn>3</mn></msub><mo>(</mo><mi>p</mi><mi>h</mi><mi>i</mi><mn>3</mn><mo>)</mo></mrow><annotation encoding="application/x-tex">e_3x^2 = z_3 + k_3(phi3)
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0141079999999998em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">e</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathdefault">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641079999999999em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.73333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.04398em;">z</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.04398em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.03148em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathdefault">p</span><span class="mord mathdefault">h</span><span class="mord mathdefault">i</span><span class="mord">3</span><span class="mclose">)</span></span></span></span></span></p>
+<p>这道题有两种方法造格<br>
+第一种：可以参考一下<a href="https://dexterjie.github.io/2024/11/23/%E8%B5%9B%E9%A2%98%E5%A4%8D%E7%8E%B0/%E7%BD%91%E9%BC%8E%E6%9D%AF%E5%8D%8A%E5%86%B3%E8%B5%9B/">DexterJie's Blog</a><br>
+第二种：我参考的<a href="https://eprint.iacr.org/2014/549.pdf">论文</a><br>
+根据论文造格<br>
+<img src="https://Chestnut-lzj.github.io/post-images/1733407763985.png" alt="" loading="lazy"></p>
+<pre><code class="language-python">N = max(Ns)
+k = 3
+delta = 0.375
+epsilon = sqrt(5) * N^(delta-1/2)
+n = k
+C = int(3^(n+1) * 2 ^ ((n+1)*(n-4)/4) * epsilon^(-n-1))
+
+M = Matrix(ZZ, [[1, -int(C * es[0] / (ns[0] + 1)), -int(C * es[1] / (ns[1] + 1)), -int(C * es[2] / (ns[2] + 1))],
+                [0, C, 0, 0],
+                [0, 0, C, 0],
+                [0, 0, 0, C]])
+
+K = M.LLL()
+need_x = K * M.inverse()
+x, y1, y2, y3 = -need_x[0]
+# print(x, y1, y2, y3)
+ys = [y1, y2, y3]
+</code></pre>
+<p>这么写出来之后得到的x其实是<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>e</mi><msup><mi>x</mi><mn>2</mn></msup><mo>=</mo><mi>z</mi><mo>+</mo><mi>k</mi><mo>(</mo><mi>p</mi><mi>h</mi><mi>i</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">ex^2 = z + k(phi)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141079999999999em;vertical-align:0em;"></span><span class="mord mathdefault">e</span><span class="mord"><span class="mord mathdefault">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.66666em;vertical-align:-0.08333em;"></span><span class="mord mathdefault" style="margin-right:0.04398em;">z</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="mopen">(</span><span class="mord mathdefault">p</span><span class="mord mathdefault">h</span><span class="mord mathdefault">i</span><span class="mclose">)</span></span></span></span>中的<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">x^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141079999999999em;vertical-align:0em;"></span><span class="mord"><span class="mord mathdefault">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span>,y是其中的k<br>
+然后再通过<br>
+<img src="https://Chestnut-lzj.github.io/post-images/1733409196924.png" alt="" loading="lazy"><br>
+算出了p的高位,测试数据后发现大概是p的低254位是未知的，直接爆破8位使用copper，最后由于e和phi不互素，选择直接开e次方<br>
+代码如下：</p>
+<pre><code class="language-python">from Crypto.Util.number import *
+import itertools
+import gmpy2
+from tqdm import *
+x2 = 2877220048349607321239927445084818279140784565868620282931508422526367853504956884205255802759310840082258719223169
+y = 2301676272809692596927119509132698644931773271928055900098255469704331118044221153572405926526946327057790408660435
+Ns = [58456238154727772714762362790039415372652580738847549549926175214592421074440425380491278175531057453959583518365006871715668115289674464868754600641087664868445977308497244134179400977293896807231964047365956545629327100737851868274388108150918741474301542596310528990700043925342513137054619092876834352167, 77621328849675766747673031143217563980503830449890233197117569566535170499356584333526498228802079135043121885950830320777642529199704224484173792215691924850086027618183393165197503325417741686635820334799489140360184827244176669486536901652827052817389390205607840551799799037689580359943641014734459153393, 112244920700186260026594736958318991062998987080230137582151100770199379608284829383065111800934933346946496041561749555085922429662611986339400029890877247514987095240380019377389184545006798594193383230298132838994539491402564579629017309643629910561998268286162916487705908044261914142200286678017692930877]
+
+es = [46762963588977775648213636278524171408894671002158172701955774077187382885695296449518850546775920334764033057745226744111631183010556541467024035131602309988991836959736948179491431343087734419406823467043032520956443072556932946767546576469286010676651317873358203560021064830688914958086524112915123700678, 49605058941818136068558533413619424099600243928109466352604646203354430655695939177245076016870792265350960174089601299549033530643078866868937787258274475767441534991912769995268058506952466739575911255510940326565376471493045685544056383561868628029099619187607579109612157304977780126730283103824111801708, 35433601810279274137096137736120773703247868305827931187532982974242279082633517463016086358856291932337981126992048059591164336008738979183437333221010305682689432537562502148059203087673302900990705589870381203411821061168753251557946997898741497047442934600089950257888693394999451561437497637827070063398]
+
+cs = 45042826649205831967869785980034342377048541926664036544108272069702081866501394370318117629151408517708467341069558466115205805860156690204194355692872459196902123082567148537856941845388225814307822482217762135547080677443326657146552580523747535577686386312386011950929734955156100305548239483424574706729
+
+S = abs(int(Ns[0] + 1 - es[0] * x2 // y))
+D = isqrt(abs(S**2-4*Ns[0]))
+phigh = (S+D)//2
+print(len(bin(phigh)))
+p_high = int(phigh) &gt;&gt; 256
+for i in trange(2**8):
+     p4 = p_high &lt;&lt; 8
+     p4 = p4 + i
+     kbits = 512 - p4.bit_length()
+     p4 = p4 &lt;&lt; kbits
+     R.&lt;x&gt; = PolynomialRing(Zmod(Ns[0]))
+     f = x + p4
+     x = f.small_roots(X=2^kbits, beta=0.4, epsilon=0.01)
+     if x:
+         p = p4 + int(x[0])
+         q = Ns[0] // p
+         print(f&quot;p = {p}&quot;)
+         print(f&quot;q = {q}&quot;)
+         break
+p = 7696200979887856341831037613988614280823562431557099321251289719686349578851157595313091133333376255237947592610103860940743200558583228583143108125315529
+q = 7595466686419558151205913432118661460574378336265188601308332178368424478703273480167149453312906478797521330243646557948961908036589158891684701262055023
+n = p * q
+assert  n == Ns[0]
+e = 8462913
+k = gmpy2.gcd(e,(p-1)*(q-1))
+res = Zmod(p)(c).nth_root(e, all=True)
+for i in res:
+    temp = long_to_bytes(int(i))
+    if (b&quot;flag&quot; in temp):
+      print(temp)
+#b'flag{N3w_Attacks_4_key_equat1ons}'
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[关于]]></title>
+        <id>https://Chestnut-lzj.github.io/post/about/</id>
+        <link href="https://Chestnut-lzj.github.io/post/about/">
+        </link>
+        <updated>2019-01-25T11:09:48.000Z</updated>
+        <content type="html"><![CDATA[<p>🏠 关于本站                           CTF</p>
+<p>👨‍💻 博主是谁                       Chestnut</p>
+<p>📬 QQ                       457164061@qq.com</p>
+]]></content>
+    </entry>
+</feed>
