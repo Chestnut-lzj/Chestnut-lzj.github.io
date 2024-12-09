@@ -1,0 +1,455 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://Chestnut-lzj.github.io</id>
+    <title>Chestnut&apos;s blog</title>
+    <updated>2024-12-09T03:42:20.259Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://Chestnut-lzj.github.io"/>
+    <link rel="self" href="https://Chestnut-lzj.github.io/atom.xml"/>
+    <subtitle>随便写写</subtitle>
+    <logo>https://Chestnut-lzj.github.io/images/avatar.png</logo>
+    <icon>https://Chestnut-lzj.github.io/favicon.ico</icon>
+    <rights>All rights reserved 2024, Chestnut&apos;s blog</rights>
+    <entry>
+        <title type="html"><![CDATA[2024-国城杯-crypto]]></title>
+        <id>https://Chestnut-lzj.github.io/post/2024-guo-cheng-bei-crypto/</id>
+        <link href="https://Chestnut-lzj.github.io/post/2024-guo-cheng-bei-crypto/">
+        </link>
+        <updated>2024-12-09T02:37:28.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="babyrsa">babyrsa</h2>
+<p>题目：</p>
+<pre><code class="language-python">from secret import flag
+from Crypto.Util.number import*
+from gmpy2 import*
+
+flag = b'D0g3xGC{****************}'
+
+def gen_key(p, q):
+    public_key = p*p*q
+    e = public_key
+    n = p*q
+    phi_n = (p-1)*(q-1)
+    private_key = inverse(e,phi_n)
+    return public_key,private_key,e
+
+p = getPrime(512)
+q = getPrime(512)
+
+N,d,e = gen_key(p,q)
+
+c = gmpy2.powmod(bytes_to_long(flag),e,N)
+
+print(N)
+print(d)
+print(c)
+
+'''
+n = 539403894871945779827202174061302970341082455928364137444962844359039924160163196863639732747261316352083923762760392277536591121706270680734175544093484423564223679628430671167864783270170316881238613070741410367403388936640139281272357761773388084534717028640788227350254140821128908338938211038299089224967666902522698905762169859839320277939509727532793553875254243396522340305880944219886874086251872580220405893975158782585205038779055706441633392356197489
+d = 58169755386408729394668831947856757060407423126014928705447058468355548861569452522734305188388017764321018770435192767746145932739423507387500606563617116764196418533748380893094448060562081543927295828007016873588530479985728135015510171217414380395169021607415979109815455365309760152218352878885075237009
+c = 82363935080688828403687816407414245190197520763274791336321809938555352729292372511750720874636733170318783864904860402219217916275532026726988967173244517058861515301795651235356589935260088896862597321759820481288634232602161279508285376396160040216717452399727353343286840178630019331762024227868572613111538565515895048015318352044475799556833174329418774012639769680007774968870455333386419199820213165698948819857171366903857477182306178673924861370469175
+'''
+</code></pre>
+<p>Schemidt-Samoa非对称密码，这里就不细说了可以自己去了解一下</p>
+<pre><code class="language-python">from gmpy2 import *
+from Crypto.Util.number import *
+
+def getPQ(pub, priv):
+    return gmpy2.gcd(pub, gmpy2.powmod(2, pub*priv, pub)-2)
+
+
+def decrypt(pub, priv, enc):
+    return gmpy2.powmod(enc, priv, getPQ(pub, priv))
+
+n = 539403894871945779827202174061302970341082455928364137444962844359039924160163196863639732747261316352083923762760392277536591121706270680734175544093484423564223679628430671167864783270170316881238613070741410367403388936640139281272357761773388084534717028640788227350254140821128908338938211038299089224967666902522698905762169859839320277939509727532793553875254243396522340305880944219886874086251872580220405893975158782585205038779055706441633392356197489
+d = 58169755386408729394668831947856757060407423126014928705447058468355548861569452522734305188388017764321018770435192767746145932739423507387500606563617116764196418533748380893094448060562081543927295828007016873588530479985728135015510171217414380395169021607415979109815455365309760152218352878885075237009
+c = 82363935080688828403687816407414245190197520763274791336321809938555352729292372511750720874636733170318783864904860402219217916275532026726988967173244517058861515301795651235356589935260088896862597321759820481288634232602161279508285376396160040216717452399727353343286840178630019331762024227868572613111538565515895048015318352044475799556833174329418774012639769680007774968870455333386419199820213165698948819857171366903857477182306178673924861370469175
+
+
+pq = getPQ(n, d)
+m = decrypt(n, d, c)
+print(long_to_bytes(m))
+</code></pre>
+<h2 id="ez_sign">EZ_sign</h2>
+<p>题目：</p>
+<pre><code class="language-python">from Crypto.Util.number import *
+from gmpy2 import *
+from hashlib import*
+import random,os
+
+flag = b'D0g3xGA{***************}'
+msg = b'e = ?'
+
+def sign(pub, pri, k):
+    (p,q,g,y) = pub
+    x = pri
+    r = int(powmod(g, k, p) % q)
+    H = bytes_to_long(sha1(os.urandom(20)).digest())
+    s = int((H + r * x) * invert(k, q) % q)
+    return (H,r,s)
+
+k1 = getPrime(64)
+k2 = k1 ** 2
+pri = bytes_to_long(msg)
+a = 149328490045436942604988875802116489621328828898285420947715311349436861817490291824444921097051302371708542907256342876547658101870212721747647670430302669064864905380294108258544172347364992433926644937979367545128905469215614628012983692577094048505556341118385280805187867314256525730071844236934151633203
+b = 829396411171540475587755762866203184101195238207
+g = 87036604306839610565326489540582721363203007549199721259441400754982765368067012246281187432501490614633302696667034188357108387643921907247964850741525797183732941221335215366182266284004953589251764575162228404140768536534167491117433689878845912406615227673100755350290475167413701005196853054828541680397
+y = 97644672217092534422903769459190836176879315123054001151977789291649564201120414036287557280431608390741595834467632108397663276781265601024889217654490419259208919898180195586714790127650244788782155032615116944102113736041131315531765220891253274685646444667344472175149252120261958868249193192444916098238
+
+pub = (a, b, g, y)
+
+H1, r1, s1 = sign(pub, pri, k1)
+
+H2, r2, s2 = sign(pub, pri, k2)
+
+p = getPrime(128)
+q = getPrime(128)
+n = p * q
+c = powmod(bytes_to_long(flag), e, n)
+
+C = p**2 + q**2
+
+print(f'(H1, r1, s1) = {H1}, {r1}, {s1}')
+print(f'(H2, r2, s2) = {H2}, {r2}, {s2}')
+print(c)
+print(C)
+
+'''
+(H1, r1, s1) = 659787401883545685817457221852854226644541324571, 334878452864978819061930997065061937449464345411, 282119793273156214497433603026823910474682900640
+(H2, r2, s2) = 156467414524100313878421798396433081456201599833, 584114556699509111695337565541829205336940360354, 827371522240921066790477048569787834877112159142
+c = 18947793008364154366082991046877977562448549186943043756326365751169362247521
+C = 179093209181929149953346613617854206675976823277412565868079070299728290913658
+'''
+</code></pre>
+<p>条件有</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>k</mi><mn>2</mn></msub><mo>=</mo><msubsup><mi>k</mi><mn>1</mn><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">k_2 = k_1^{2}
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.84444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.03148em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1.1111079999999998em;vertical-align:-0.247em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8641079999999999em;"><span style="top:-2.4530000000000003em;margin-left:-0.03148em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.247em;"><span></span></span></span></span></span></span></span></span></span></span></p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>s</mi><mn>1</mn></msub><mo>≡</mo><mo>(</mo><mi>H</mi><mo>(</mo><msub><mi>m</mi><mn>1</mn></msub><mo>)</mo><mo>+</mo><msub><mi>r</mi><mn>1</mn></msub><mi>x</mi><mo>)</mo><msubsup><mi>k</mi><mn>1</mn><mrow><mo>−</mo><mn>1</mn></mrow></msubsup><mspace></mspace><mspace width="1em"/><mrow><mi mathvariant="normal">m</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">d</mi></mrow><mtext> </mtext><mtext> </mtext><mi>q</mi></mrow><annotation encoding="application/x-tex">s_1 \equiv (H(m_1)+r_1x)k_1^{-1} \mod q
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.61375em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">≡</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.08125em;">H</span><span class="mopen">(</span><span class="mord"><span class="mord mathdefault">m</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1.1205469999999997em;vertical-align:-0.256439em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.02778em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathdefault">x</span><span class="mclose">)</span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8641079999999999em;"><span style="top:-2.4435610000000003em;margin-left:-0.03148em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.256439em;"><span></span></span></span></span></span></span><span class="mspace allowbreak"></span><span class="mspace" style="margin-right:1em;"></span></span><span class="base"><span class="strut" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="mord"><span class="mord"><span class="mord mathrm">m</span><span class="mord mathrm">o</span><span class="mord mathrm">d</span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">q</span></span></span></span></span></p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>s</mi><mn>2</mn></msub><mo>≡</mo><mo>(</mo><mi>H</mi><mo>(</mo><msub><mi>m</mi><mn>2</mn></msub><mo>)</mo><mo>+</mo><msub><mi>r</mi><mn>2</mn></msub><mi>x</mi><mo>)</mo><msubsup><mi>k</mi><mn>2</mn><mrow><mo>−</mo><mn>1</mn></mrow></msubsup><mspace></mspace><mspace width="1em"/><mrow><mi mathvariant="normal">m</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">d</mi></mrow><mtext> </mtext><mtext> </mtext><mi>q</mi></mrow><annotation encoding="application/x-tex">s_2 \equiv (H(m_2)+r_2x)k_2^{-1} \mod q
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.61375em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">≡</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.08125em;">H</span><span class="mopen">(</span><span class="mord"><span class="mord mathdefault">m</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1.1205469999999997em;vertical-align:-0.256439em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.02778em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathdefault">x</span><span class="mclose">)</span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8641079999999999em;"><span style="top:-2.4435610000000003em;margin-left:-0.03148em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.256439em;"><span></span></span></span></span></span></span><span class="mspace allowbreak"></span><span class="mspace" style="margin-right:1em;"></span></span><span class="base"><span class="strut" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="mord"><span class="mord"><span class="mord mathrm">m</span><span class="mord mathrm">o</span><span class="mord mathrm">d</span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">q</span></span></span></span></span></p>
+<p>可以推导出</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>s</mi><mn>1</mn></msub><msub><mi>k</mi><mn>1</mn></msub><mo>≡</mo><mi>H</mi><mo>(</mo><msub><mi>m</mi><mn>1</mn></msub><mo>)</mo><mo>+</mo><msub><mi>r</mi><mn>1</mn></msub><mi>x</mi><mspace></mspace><mspace width="1em"/><mrow><mi mathvariant="normal">m</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">d</mi></mrow><mtext> </mtext><mtext> </mtext><mi>q</mi></mrow><annotation encoding="application/x-tex">s_1k_1 \equiv H(m_1)+r_1x \mod q
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.84444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.03148em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">≡</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.08125em;">H</span><span class="mopen">(</span><span class="mord"><span class="mord mathdefault">m</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.58056em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.02778em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathdefault">x</span><span class="mspace allowbreak"></span><span class="mspace" style="margin-right:1em;"></span></span><span class="base"><span class="strut" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="mord"><span class="mord"><span class="mord mathrm">m</span><span class="mord mathrm">o</span><span class="mord mathrm">d</span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">q</span></span></span></span></span></p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>s</mi><mn>2</mn></msub><msubsup><mi>k</mi><mn>1</mn><mn>2</mn></msubsup><mo>≡</mo><mi>H</mi><mo>(</mo><msub><mi>m</mi><mn>2</mn></msub><mo>)</mo><mo>+</mo><msub><mi>r</mi><mn>2</mn></msub><mi>x</mi><mspace></mspace><mspace width="1em"/><mrow><mi mathvariant="normal">m</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">d</mi></mrow><mtext> </mtext><mtext> </mtext><mi>q</mi></mrow><annotation encoding="application/x-tex">s_2k_1^{2} \equiv H(m_2)+r_2x \mod q
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.1111079999999998em;vertical-align:-0.247em;"></span><span class="mord"><span class="mord mathdefault">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8641079999999999em;"><span style="top:-2.4530000000000003em;margin-left:-0.03148em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.247em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">≡</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.08125em;">H</span><span class="mopen">(</span><span class="mord"><span class="mord mathdefault">m</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.58056em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.02778em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathdefault">x</span><span class="mspace allowbreak"></span><span class="mspace" style="margin-right:1em;"></span></span><span class="base"><span class="strut" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="mord"><span class="mord"><span class="mord mathrm">m</span><span class="mord mathrm">o</span><span class="mord mathrm">d</span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">q</span></span></span></span></span></p>
+<p>上式乘r2，下式乘r1，消掉x得到</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>s</mi><mn>2</mn></msub><msubsup><mi>k</mi><mn>1</mn><mn>2</mn></msubsup><msub><mi>r</mi><mn>1</mn></msub><mo>−</mo><msub><mi>s</mi><mn>1</mn></msub><msub><mi>k</mi><mn>1</mn></msub><msub><mi>r</mi><mn>2</mn></msub><mo>−</mo><mi>H</mi><mo>(</mo><msub><mi>m</mi><mn>2</mn></msub><mo>)</mo><msub><mi>r</mi><mn>1</mn></msub><mo>+</mo><mi>H</mi><mo>(</mo><mi>m</mi><mn>1</mn><mo>)</mo><msub><mi>r</mi><mn>2</mn></msub><mo>≡</mo><mn>0</mn><mspace></mspace><mspace width="1em"/><mrow><mi mathvariant="normal">m</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">d</mi></mrow><mtext> </mtext><mtext> </mtext><mi>q</mi></mrow><annotation encoding="application/x-tex">s_2k_1^{2}r_1 - s_1k_1r_2 - H(m_2)r_1 + H(m1)r_2  \equiv  0  \mod q
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.1111079999999998em;vertical-align:-0.247em;"></span><span class="mord"><span class="mord mathdefault">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8641079999999999em;"><span style="top:-2.4530000000000003em;margin-left:-0.03148em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.247em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.02778em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.84444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.03148em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.02778em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.08125em;">H</span><span class="mopen">(</span><span class="mord"><span class="mord mathdefault">m</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mord"><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.02778em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.08125em;">H</span><span class="mopen">(</span><span class="mord mathdefault">m</span><span class="mord">1</span><span class="mclose">)</span><span class="mord"><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.02778em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">≡</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">0</span><span class="mspace allowbreak"></span><span class="mspace" style="margin-right:1em;"></span></span><span class="base"><span class="strut" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="mord"><span class="mord"><span class="mord mathrm">m</span><span class="mord mathrm">o</span><span class="mord mathrm">d</span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">q</span></span></span></span></span></p>
+<p>从而来求这个多项式根</p>
+<pre><code class="language-python">from Crypto.Util.number import *
+import gmpy2
+from tqdm import tqdm
+from Crypto.PublicKey import RSA
+from tqdm import *
+p = 149328490045436942604988875802116489621328828898285420947715311349436861817490291824444921097051302371708542907256342876547658101870212721747647670430302669064864905380294108258544172347364992433926644937979367545128905469215614628012983692577094048505556341118385280805187867314256525730071844236934151633203
+q = 829396411171540475587755762866203184101195238207
+g = 87036604306839610565326489540582721363203007549199721259441400754982765368067012246281187432501490614633302696667034188357108387643921907247964850741525797183732941221335215366182266284004953589251764575162228404140768536534167491117433689878845912406615227673100755350290475167413701005196853054828541680397
+y = 97644672217092534422903769459190836176879315123054001151977789291649564201120414036287557280431608390741595834467632108397663276781265601024889217654490419259208919898180195586714790127650244788782155032615116944102113736041131315531765220891253274685646444667344472175149252120261958868249193192444916098238
+
+(h1, r1, s1) = 659787401883545685817457221852854226644541324571, 334878452864978819061930997065061937449464345411, 282119793273156214497433603026823910474682900640
+(h2, r2, s2) =  156467414524100313878421798396433081456201599833, 584114556699509111695337565541829205336940360354, 827371522240921066790477048569787834877112159142
+
+PR.&lt;x&gt; = PolynomialRing(GF(q))
+
+f = s2*x^2*r1 - s1*x*r2 - h2*r1 + h1*r2
+
+print(f.roots())
+k = int(f.roots()[1][0])
+x = (s1*k - h1) * inverse(r1, q) % q
+print(long_to_bytes(x))
+# e = 44519
+</code></pre>
+<p>写到这里我以为之后可以直接通过two_squares秒了，写的时候发现，求不出来，甚至一度以为题有问题，后来发现求出来的p和q并不是素数，那就在想C能分解出来不止一组，于是我自己生成数据尝试了一下果然是这样<br>
+那我只能尝试别的方法了，可以写出分解后的复数形式，就是写成</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>N</mi><mo>=</mo><mo>(</mo><mi>p</mi><mo>+</mo><mi>i</mi><mi>q</mi><mo>)</mo><mo>(</mo><mi>p</mi><mo>−</mo><mi>i</mi><mi>q</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">N = (p + iq)(p - iq)
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathdefault">p</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">i</span><span class="mord mathdefault" style="margin-right:0.03588em;">q</span><span class="mclose">)</span><span class="mopen">(</span><span class="mord mathdefault">p</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">i</span><span class="mord mathdefault" style="margin-right:0.03588em;">q</span><span class="mclose">)</span></span></span></span></span></p>
+<p>这样就能得到想要的p和q了</p>
+<pre><code class="language-python">
+from itertools import combinations
+
+N = ZZ[I](179093209181929149953346613617854206675976823277412565868079070299728290913658)
+
+print(N)
+
+facs = list(factor(N))
+for i in range(len(facs)):
+     facs[i] = facs[i][0]
+print(facs)
+
+prods = []
+for i in range(1, len(facs) + 1):
+     for j in combinations(facs, i):
+        mul = prod(j)
+        if is_prime(ZZ(abs(mul[0]))) and is_prime(ZZ(abs(mul[1]))) and mul.norm() == ZZ(N):
+           print(mul)
+           print(str(abs(mul[0])).encode(&quot;utf-8&quot;))
+           print(str(abs(mul[1])).encode(&quot;utf-8&quot;))
+#p = 295488723650623654106370451762393175957
+#q = 302951519846417861008714825074296492447          
+</code></pre>
+<pre><code class="language-python">from Crypto.Util.number import *
+e = 44519
+c = 18947793008364154366082991046877977562448549186943043756326365751169362247521
+p = 295488723650623654106370451762393175957
+q = 302951519846417861008714825074296492447
+phi = (p-1)*(q-1)
+d = inverse(e,phi)
+m = pow(c,d,p*q)
+print(long_to_bytes(m))
+#D0g3xGC{EZ_DSA_@nd_C0mplex_QAQ}
+</code></pre>
+<h2 id="curve">Curve</h2>
+<p>题目:</p>
+<pre><code class="language-python">#sagemath
+from Crypto.Util.number import *
+
+def add(P, Q):
+    (x1, y1) = P
+    (x2, y2) = Q
+
+    x3 = (x1*y2 + y1*x2) * inverse(1 + d*x1*x2*y1*y2, p) % p
+    y3 = (y1*y2 - a*x1*x2) * inverse(1 - d*x1*x2*y1*y2, p) % p
+    return (x3, y3)
+
+def mul(x, P):
+    Q = (0, 1)
+    while x &gt; 0:
+        if x % 2 == 1:
+            Q = add(Q, P)
+        P = add(P, P)
+        x = x &gt;&gt; 1
+    return Q
+
+p = 64141017538026690847507665744072764126523219720088055136531450296140542176327
+a = 362
+d = 7
+e=0x10001
+
+gx=bytes_to_long(b'D0g3xGC{*****************}')
+
+PR.&lt;y&gt;=PolynomialRing(Zmod(p))
+f=(d*gx^2-1)*y^2+(1-a*gx^2)
+gy=int(f.roots()[0][0])
+
+assert (a*gx^2+gy^2)%p==(1+d*gx^2*gy^2)%p
+
+G=(gx,gy)
+
+eG = mul(e, G)
+print(eG)
+
+#eG = (34120664973166619886120801966861368419497948422807175421202190709822232354059, 11301243831592615312624457443883283529467532390028216735072818875052648928463)
+</code></pre>
+<p>标准型的扭曲爱德华曲线可以直接参考<a href="https://lazzzaro.github.io/2021/01/20/crypto-%E6%9B%B2%E7%BA%BF/">曲线 | Lazzaro </a>和<a href="https://tangcuxiaojikuai.xyz/post/187210a7.html">Crypto趣题-曲线</a><br>
+写的很清楚</p>
+<pre><code class="language-python">from Crypto.Util.number import *
+p = 64141017538026690847507665744072764126523219720088055136531450296140542176327
+a = 362
+d = 7
+e=0x10001
+c = 1
+eG = (34120664973166619886120801966861368419497948422807175421202190709822232354059, 11301243831592615312624457443883283529467532390028216735072818875052648928463)
+# part2 map to ECC
+F = GF(p)
+dd = F(d * c ^ 4)
+A = F(2) * F(a + dd) / F(a - dd)
+B = F(4) / F(a - dd)
+a = F(3 - A ^ 2) / F(3 * B ^ 2)
+b = F(2 * A ^ 3 - 9 * A) / F(27 * B ^ 3)
+
+
+def edwards_to_ECC(x, y):
+    x1 = F(x) / F(c)
+    y1 = F(y) / F(c)
+    # now curve is a*x^2+y^2 = 1+dd*x^2*y^2
+
+    x2 = F(1 + y1) / F(1 - y1)
+    y2 = F(x2) / F(x1)
+    # now curve is By^2 = x^3 + Ax^2 + x
+
+    x3 = (F(3 * x2) + F(A)) / F(3 * B)
+    y3 = F(y2) / F(B)
+    # now curve is y^2 = x^3 + ax + b
+
+    return (x3, y3)
+
+
+def ECC_to_edwards(x, y):
+    x2 = (F(x) * F(3 * B) - F(A)) / F(3)
+    y2 = F(y) * F(B)
+    # now curve is By^2 = x^3 + Ax^2 + x
+
+    x1 = F(x2) / F(y2)
+    y1 = F(1) - (F(2) / F(x2 + 1))
+    # now curve is a*x^2+y^2 = 1+dd*x^2*y^2
+
+    x_ = F(x1) * F(c)
+    y_ = F(y1) * F(c)
+    # now curve is a*x^2+y^2 = c^2(1+d*x^2*y^2)
+
+    return (x_, y_)
+
+
+E = EllipticCurve(GF(p), [a, b])
+order = E.order()
+eG = E(edwards_to_ECC(eG[0], eG[1]))
+t = inverse(e, order)
+G = t * eG
+G = ECC_to_edwards(G[0], G[1])
+print(long_to_bytes(int(G[0])))
+# D0g3xGC{SOlvE_The_Edcurv3}
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[关于]]></title>
+        <id>https://Chestnut-lzj.github.io/post/about/</id>
+        <link href="https://Chestnut-lzj.github.io/post/about/">
+        </link>
+        <updated>2024-12-05T11:09:48.000Z</updated>
+        <content type="html"><![CDATA[<p>本站关于 ：               CTF</p>
+<p>联系方式 ：               qq 457164061</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[2024 网鼎杯 半决赛]]></title>
+        <id>https://Chestnut-lzj.github.io/post/2024-wang-ding-bei-ban-jue-sai/</id>
+        <link href="https://Chestnut-lzj.github.io/post/2024-wang-ding-bei-ban-jue-sai/">
+        </link>
+        <updated>2024-12-04T02:45:48.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="rsa">RSA</h2>
+<p>题目：</p>
+<pre><code class="language-python"># sagemath
+import random
+from Crypto.Util.number import *
+
+flag = b''
+
+k = 3
+d = k/(2*(k+1))
+ns = []
+pqs = []
+es = []
+
+for i in range(3):
+    p = getPrime(512)
+    q = getPrime(512)
+    if p &lt; q:
+        tmp = p
+        p = q
+        q = tmp
+    n = p*q
+    ns.append(n)
+    pqs.append((p,q))
+
+n = min(ns)
+x = random.randint(0,int(n^(d/2)))
+x = next_prime(x)
+
+for i in range(3):
+    p,q = pqs[i][0],pqs[i][1]
+    bound1 = int((p-q)/(3*(p+q)) * x * n ^ 0.25)
+    bound2 = int((p-q)/(3*(p+q)) * x^2 * n ^ 0.25)
+    z = random.randint(bound1,bound2)
+    f = (p-1)*(q-1)
+    e = inverse(x^2,f) * z % f
+    es.append(e)
+
+e = 8462913
+c = pow(bytes_to_long(flag),e,ns[0])
+
+print(f'ns={ns}')
+print(f'es={es}')
+print(f'c={c}')
+
+'''
+ns=[58456238154727772714762362790039415372652580738847549549926175214592421074440425380491278175531057453959583518365006871715668115289674464868754600641087664868445977308497244134179400977293896807231964047365956545629327100737851868274388108150918741474301542596310528990700043925342513137054619092876834352167, 77621328849675766747673031143217563980503830449890233197117569566535170499356584333526498228802079135043121885950830320777642529199704224484173792215691924850086027618183393165197503325417741686635820334799489140360184827244176669486536901652827052817389390205607840551799799037689580359943641014734459153393, 112244920700186260026594736958318991062998987080230137582151100770199379608284829383065111800934933346946496041561749555085922429662611986339400029890877247514987095240380019377389184545006798594193383230298132838994539491402564579629017309643629910561998268286162916487705908044261914142200286678017692930877]
+es=[46762963588977775648213636278524171408894671002158172701955774077187382885695296449518850546775920334764033057745226744111631183010556541467024035131602309988991836959736948179491431343087734419406823467043032520956443072556932946767546576469286010676651317873358203560021064830688914958086524112915123700678, 49605058941818136068558533413619424099600243928109466352604646203354430655695939177245076016870792265350960174089601299549033530643078866868937787258274475767441534991912769995268058506952466739575911255510940326565376471493045685544056383561868628029099619187607579109612157304977780126730283103824111801708, 35433601810279274137096137736120773703247868305827931187532982974242279082633517463016086358856291932337981126992048059591164336008738979183437333221010305682689432537562502148059203087673302900990705589870381203411821061168753251557946997898741497047442934600089950257888693394999451561437497637827070063398]
+c=45042826649205831967869785980034342377048541926664036544108272069702081866501394370318117629151408517708467341069558466115205805860156690204194355692872459196902123082567148537856941845388225814307822482217762135547080677443326657146552580523747535577686386312386011950929734955156100305548239483424574706729
+'''
+</code></pre>
+<p>首先我们通过</p>
+<pre><code class="language-python">  e = inverse(x^2,f) * z % f
+</code></pre>
+<p>得到以下式子</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>e</mi><mn>1</mn></msub><msup><mi>x</mi><mn>2</mn></msup><mo>=</mo><msub><mi>z</mi><mn>1</mn></msub><mo>+</mo><msub><mi>k</mi><mn>1</mn></msub><mo>(</mo><mi>p</mi><mi>h</mi><mi>i</mi><mn>1</mn><mo>)</mo></mrow><annotation encoding="application/x-tex">e_1x^2 = z_1 + k_1(phi1)
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0141079999999998em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">e</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathdefault">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641079999999999em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.73333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.04398em;">z</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.04398em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.03148em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathdefault">p</span><span class="mord mathdefault">h</span><span class="mord mathdefault">i</span><span class="mord">1</span><span class="mclose">)</span></span></span></span></span></p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>e</mi><mn>2</mn></msub><msup><mi>x</mi><mn>2</mn></msup><mo>=</mo><msub><mi>z</mi><mn>2</mn></msub><mo>+</mo><msub><mi>k</mi><mn>2</mn></msub><mo>(</mo><mi>p</mi><mi>h</mi><mn>2</mn><mo>)</mo></mrow><annotation encoding="application/x-tex">e_2x^2 = z_2 + k_2(ph2)
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0141079999999998em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">e</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathdefault">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641079999999999em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.73333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.04398em;">z</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.04398em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.03148em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathdefault">p</span><span class="mord mathdefault">h</span><span class="mord">2</span><span class="mclose">)</span></span></span></span></span></p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>e</mi><mn>3</mn></msub><msup><mi>x</mi><mn>2</mn></msup><mo>=</mo><msub><mi>z</mi><mn>3</mn></msub><mo>+</mo><msub><mi>k</mi><mn>3</mn></msub><mo>(</mo><mi>p</mi><mi>h</mi><mi>i</mi><mn>3</mn><mo>)</mo></mrow><annotation encoding="application/x-tex">e_3x^2 = z_3 + k_3(phi3)
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0141079999999998em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault">e</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathdefault">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641079999999999em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.73333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.04398em;">z</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.04398em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.03148em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathdefault">p</span><span class="mord mathdefault">h</span><span class="mord mathdefault">i</span><span class="mord">3</span><span class="mclose">)</span></span></span></span></span></p>
+<p>这道题有两种方法造格<br>
+第一种：可以参考一下<a href="https://dexterjie.github.io/2024/11/23/%E8%B5%9B%E9%A2%98%E5%A4%8D%E7%8E%B0/%E7%BD%91%E9%BC%8E%E6%9D%AF%E5%8D%8A%E5%86%B3%E8%B5%9B/">DexterJie's Blog</a><br>
+第二种：我参考的<a href="https://eprint.iacr.org/2014/549.pdf">论文</a><br>
+根据论文造格<br>
+<img src="https://Chestnut-lzj.github.io/post-images/1733407763985.png" alt="" loading="lazy"></p>
+<pre><code class="language-python">N = max(Ns)
+k = 3
+delta = 0.375
+epsilon = sqrt(5) * N^(delta-1/2)
+n = k
+C = int(3^(n+1) * 2 ^ ((n+1)*(n-4)/4) * epsilon^(-n-1))
+
+M = Matrix(ZZ, [[1, -int(C * es[0] / (ns[0] + 1)), -int(C * es[1] / (ns[1] + 1)), -int(C * es[2] / (ns[2] + 1))],
+                [0, C, 0, 0],
+                [0, 0, C, 0],
+                [0, 0, 0, C]])
+
+K = M.LLL()
+need_x = K * M.inverse()
+x, y1, y2, y3 = -need_x[0]
+# print(x, y1, y2, y3)
+ys = [y1, y2, y3]
+</code></pre>
+<p>这么写出来之后得到的x其实是<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>e</mi><msup><mi>x</mi><mn>2</mn></msup><mo>=</mo><mi>z</mi><mo>+</mo><mi>k</mi><mo>(</mo><mi>p</mi><mi>h</mi><mi>i</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">ex^2 = z + k(phi)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141079999999999em;vertical-align:0em;"></span><span class="mord mathdefault">e</span><span class="mord"><span class="mord mathdefault">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.66666em;vertical-align:-0.08333em;"></span><span class="mord mathdefault" style="margin-right:0.04398em;">z</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="mopen">(</span><span class="mord mathdefault">p</span><span class="mord mathdefault">h</span><span class="mord mathdefault">i</span><span class="mclose">)</span></span></span></span>中的<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">x^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141079999999999em;vertical-align:0em;"></span><span class="mord"><span class="mord mathdefault">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141079999999999em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span>,y是其中的k<br>
+然后再通过<br>
+<img src="https://Chestnut-lzj.github.io/post-images/1733409196924.png" alt="" loading="lazy"><br>
+算出了p的高位,测试数据后发现大概是p的低254位是未知的，直接爆破8位使用copper，最后由于e和phi不互素，选择直接开e次方<br>
+代码如下：</p>
+<pre><code class="language-python">from Crypto.Util.number import *
+import itertools
+import gmpy2
+from tqdm import *
+x2 = 2877220048349607321239927445084818279140784565868620282931508422526367853504956884205255802759310840082258719223169
+y = 2301676272809692596927119509132698644931773271928055900098255469704331118044221153572405926526946327057790408660435
+Ns = [58456238154727772714762362790039415372652580738847549549926175214592421074440425380491278175531057453959583518365006871715668115289674464868754600641087664868445977308497244134179400977293896807231964047365956545629327100737851868274388108150918741474301542596310528990700043925342513137054619092876834352167, 77621328849675766747673031143217563980503830449890233197117569566535170499356584333526498228802079135043121885950830320777642529199704224484173792215691924850086027618183393165197503325417741686635820334799489140360184827244176669486536901652827052817389390205607840551799799037689580359943641014734459153393, 112244920700186260026594736958318991062998987080230137582151100770199379608284829383065111800934933346946496041561749555085922429662611986339400029890877247514987095240380019377389184545006798594193383230298132838994539491402564579629017309643629910561998268286162916487705908044261914142200286678017692930877]
+
+es = [46762963588977775648213636278524171408894671002158172701955774077187382885695296449518850546775920334764033057745226744111631183010556541467024035131602309988991836959736948179491431343087734419406823467043032520956443072556932946767546576469286010676651317873358203560021064830688914958086524112915123700678, 49605058941818136068558533413619424099600243928109466352604646203354430655695939177245076016870792265350960174089601299549033530643078866868937787258274475767441534991912769995268058506952466739575911255510940326565376471493045685544056383561868628029099619187607579109612157304977780126730283103824111801708, 35433601810279274137096137736120773703247868305827931187532982974242279082633517463016086358856291932337981126992048059591164336008738979183437333221010305682689432537562502148059203087673302900990705589870381203411821061168753251557946997898741497047442934600089950257888693394999451561437497637827070063398]
+
+cs = 45042826649205831967869785980034342377048541926664036544108272069702081866501394370318117629151408517708467341069558466115205805860156690204194355692872459196902123082567148537856941845388225814307822482217762135547080677443326657146552580523747535577686386312386011950929734955156100305548239483424574706729
+
+S = abs(int(Ns[0] + 1 - es[0] * x2 // y))
+D = isqrt(abs(S**2-4*Ns[0]))
+phigh = (S+D)//2
+print(len(bin(phigh)))
+p_high = int(phigh) &gt;&gt; 256
+for i in trange(2**8):
+     p4 = p_high &lt;&lt; 8
+     p4 = p4 + i
+     kbits = 512 - p4.bit_length()
+     p4 = p4 &lt;&lt; kbits
+     R.&lt;x&gt; = PolynomialRing(Zmod(Ns[0]))
+     f = x + p4
+     x = f.small_roots(X=2^kbits, beta=0.4, epsilon=0.01)
+     if x:
+         p = p4 + int(x[0])
+         q = Ns[0] // p
+         print(f&quot;p = {p}&quot;)
+         print(f&quot;q = {q}&quot;)
+         break
+p = 7696200979887856341831037613988614280823562431557099321251289719686349578851157595313091133333376255237947592610103860940743200558583228583143108125315529
+q = 7595466686419558151205913432118661460574378336265188601308332178368424478703273480167149453312906478797521330243646557948961908036589158891684701262055023
+n = p * q
+assert  n == Ns[0]
+e = 8462913
+k = gmpy2.gcd(e,(p-1)*(q-1))
+res = Zmod(p)(c).nth_root(e, all=True)
+for i in res:
+    temp = long_to_bytes(int(i))
+    if (b&quot;flag&quot; in temp):
+      print(temp)
+#b'flag{N3w_Attacks_4_key_equat1ons}'
+</code></pre>
+]]></content>
+    </entry>
+</feed>
